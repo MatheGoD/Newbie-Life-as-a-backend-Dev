@@ -62,13 +62,13 @@ function posts_list (users, posts) {
           lists.push({
           "userId" : users[i].id,
           "userName" : users[i].name,
-          "postingID" : users[i].id,
+          "postingId" : users[i].id,
           "postingTitle" : posts[i].title,
           "postingImageUrl" : posts[i].imageUrl,
           "postingContent" : posts[i].content,        
             });
           };   
-    const column = ['userId', 'userName', 'postingID', 'postingTitle', 'postingImageUrl', 'postingContent'];
+    const column = ['userId', 'userName', 'postingId', 'postingTitle', 'postingImageUrl', 'postingContent'];
   
       for (let k = 0 ; k < lists.length ; k++){
         for (let l = 0 ; l < column.length ; l++){
@@ -79,57 +79,74 @@ function posts_list (users, posts) {
     }
     return lists
   }
- 
+
 const posts_lists = {"data" : posts_list(users,posts)};
+
+let listOfPosts = posts_list(users,posts);
 
 const requestReceiver = function (request, response) {
     const { url, method } = request
-      if (method === 'GET') {
-            if (url === '/users_data'){
-               response.writeHead(200, {'Content-Type' : 'application/json'});
-               response.end(JSON.stringify({message : users}));
-            }
-            else if (url === '/post_list'){
-                response.writeHead(200, {'Content-Type' : 'application/json'});
-                response.end(JSON.stringify(posts_lists));
-            };
-        } 
-      else if (method === 'POST') { // (3)
-          if (url === '/signup') {
-              let body = ''; // (4)
-              request.on('data', (data) => {body += data;})
-              
-              request.on('end', () => {  // (6)
-                  const user = JSON.parse(body); //(7) 
+    if (method === 'GET') {
+        if (url === '/users_data'){
+            response.writeHead(200, {'Content-Type' : 'application/json'});
+            response.end(JSON.stringify({message : users}));
+        }
+        else if (url === '/post_list'){
+            response.writeHead(200, {'Content-Type' : 'application/json'});
+            response.end(JSON.stringify(posts_lists));
+        };
+    } 
+    else if (method === 'POST') { // (3)
+        if (url === '/signup') {
+            let body = ''; // (4)
+            request.on('data', (data) => {body += data;})
+            request.on('end', () => {  // (6)
+                const user = JSON.parse(body); //(7) 
   
-                  users.push({ // (8)
-                      id : user.id,
-                      name : user.name,
-                      email: user.email,
-                      password : user.password
-                  })
-  
-                  response.end(JSON.stringify({message : "userCreated"}));
-              })
-          }
-          else if (url === '/posts'){
+                users.push({ // (8)
+                    id : user.id,
+                    name : user.name,
+                    email: user.email,
+                    password : user.password
+                })
+            response.end(JSON.stringify({message : "userCreated"}));
+            })
+        }
+        else if (url === '/posts'){
             let body = '';
             request.on('data', (data) => {body += data;})
             request.on('end', () => {
                 const post = JSON.parse(body);
 
                 posts.push({
-                    id : post.id,
-                    title : post.title,
-                    content : post.content,
-                    userID : post.userId
-                })
-                
-                response.end(JSON.stringify({message : "postCreated"}));
+                id : post.id,
+                title : post.title,
+                content : post.content,
+                userID : post.userId
+                })   
+            
+            response.end(JSON.stringify({message : "postCreated"}));
             })
-          }
+        }
     }
-  };
+    else if (method === 'PATCH') {
+        if (url === '/posts_edited'){
+            let body = '';
+            request.on('data', (data) => {body += data;})
+            request.on('end', () => {
+                const edition = JSON.parse(body);
+                
+                for (let i = 0 ; i < users.length ; i++){
+                    if (users[i].id === edition.postingId){
+                        listOfPosts[i].postingContent = edition.postingContent;
+                    };
+                }
+                response.writeHead(200, {'Content-Type' : 'application/json'});
+                response.end(JSON.stringify(listOfPosts));
+            });
+        };
+    };
+}
 
 server.on("request", requestReceiver)
 
