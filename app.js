@@ -56,6 +56,22 @@ const requestReceiver = function (request, response) {
                   response.end(JSON.stringify({message : "userCreated"}));
               })
           }
+          else if (url === '/posts'){
+            let body = '';
+            request.on('data', (data) => {body += data;})
+            request.on('end', () => {
+                const post = JSON.parse(body);
+
+                posts.push({
+                    id : post.id,
+                    title : post.title,
+                    content : post.content,
+                    userID : post.userId
+                })
+                
+                response.end(JSON.stringify({message : "postCreated"}));
+            })
+          }
     }
   };
 
