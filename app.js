@@ -145,14 +145,31 @@ const requestReceiver = function (request, response) {
                 response.end(JSON.stringify(listOfPosts));
             });
         };
-    };
+    }
+    else if (method === 'DELETE'){
+        if (url === '/posts_deleted'){
+            let body = '';
+            request.on('data', (data) => {body += data;})
+            request.on('end', () => {
+                const deletion = JSON.parse(body);
+                for (let i = 0 ; i < posts.length ; i++){
+                    if (posts[i].userId === deletion.id){
+                        delete posts[i];
+                    };
+                }
+                response.writeHead(200, {'Content-Type' :'application/json'});
+                response.end(JSON.stringify({"message": "postingDeleted"}));
+            });
+        }
+    }
 }
+
 
 server.on("request", requestReceiver)
 
-// const IP = '127.0.0.1'
+const IP = '127.0.0.1'
 const PORT = 8000
 
-server.listen(PORT, function() {
+server.listen(PORT, IP, function() {
     console.log(`Listening to request on & port ${PORT}`)
 })
